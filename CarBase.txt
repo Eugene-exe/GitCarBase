@@ -1,0 +1,231 @@
+Додаток 2 – Код другого завдання.
+/*Структура ТРАНСПОРТНИЙ ЗАСІБ: марка, потужність, вартість, дата реєстрації, колір, номер.
+Написати функцію створення бінарного файлу і внесення в нього нових записів, значення яких вводяться з клавіатури;
+Написати функцію виведення інформації з файлу на екран з шапкою;
+Написати функцію доповнення вже існуючого файлу структур новими структурами;
+Написати функцію пошуку структур із заданими ознаками (наприклад, за заданому діапазону значень елемента);
+Написати функцію упорядкування файлу структур по заданому полю (елементу).
+*/
+#include <conio.h>
+#include <stdio.h>
+#include <iostream>
+#include <stdlib.h>			/*Подключаем нужные для работы библиотеки*/
+#include <string.h>
+#include <Windows.h>
+#include <vector>
+
+using namespace std;
+
+struct Transport
+{
+	char mk[64];        // Марка автомобиля
+	int power;          // Модель автомобиля
+	int cost;           // Цена
+	int date;           // Год выпуска
+	char color[64];     // Модель автомобиля
+	char number[64];    // Номер автомобиля
+};
+
+typedef char* Name;             // Тип данных для имени файла
+typedef FILE File;              // Тип данных для файловой переменной
+Name FileName = new char[32];   // Переменная для имени файла
+File* file;                     // Переменная файла
+Transport Avto;                 // Перменная для структуры Transport
+int flag = 0;                   // Флаг для открытия файла
+
+
+void PrintErr() // Выыод ошибки
+{
+	cout << endl << "Choose file to work" << '\n';
+	cout << "Select item 1 in the menu"   << '\n';
+	getch();
+}
+
+void Menu() // Меню программы
+{
+	system("cls"); // Очистка экрана консоли
+	cout << "MENU" << endl
+		 << "1.Creation / opening of a car database"   << '\n'
+		 << "2.Adding a car to the database"           << '\n'
+		 << "3.View full database"                     << '\n'
+		 << "4.Search for a car of the required power" << '\n'
+		 << "0.Exit [ESC]"                             << '\n';
+}
+
+void EnterTransport(Transport& Avto) // Ввод данных в структуру
+{
+	cout << "<Car addition>" << endl;
+	cout << "Сar model: ";         cin.getline(Avto.mk, 8);     cin.clear();
+	cout << "Car power: ";         cin >> Avto.power;           cin.get();
+	cout << "Car cost (in $.): ";  cin >> Avto.cost;            cin.get();
+	cout << "Registration date: "; cin >> Avto.date;            cin.get();
+	cout << "Car color: ";         cin.getline(Avto.color, 8);  cin.clear();
+	cout << "Plate number: ";      cin.getline(Avto.number, 8); cin.clear();
+}
+
+void ShowTransport(Transport Avto) // Вывод данных об автомобилях
+{
+	cout << "Car info: "                         << '\n';
+	cout << "Сar model: "         << Avto.mk     << '\n';
+	cout << "Car power: "         << Avto.power  << '\n';
+	cout << "Car cost (in $.): "  << Avto.cost   << '\n';
+	cout << "Registration date: " << Avto.date   << '\n';
+	cout << "Car color: "         << Avto.color  << '\n';
+	cout << "Plate number: "      << Avto.number << '\n';
+}
+
+void CreatOpenFile(Name& FileName, int& flag) // Создание/открытие файла базы данных
+{
+	char Causelove;
+	flag = 0;
+	cout << "Enter File name: "; cin >> FileName;
+	file = fopen(FileName, "r");                   // Права на чтение файла
+	if (file == NULL)
+	{
+		do
+		{
+			system("cls");
+			cout << "File "        << FileName << " " << "doesn't exist" << endl;
+			cout << "Create file " << FileName << "?"                    << endl;
+			cout << "Press Y / N"                                        << endl;
+			Causelove = getch();
+			if (Causelove == 'Y' || Causelove == 'y') // Исключаем проблему зажатого CAPSLOCK
+			{
+				file = fopen(FileName, "w");          // Права на запись файла
+				cout << "File created (Когратюлэйнш)" << endl;
+				system("pause");
+				flag = 1;
+				fclose(file);
+			}
+			if (Causelove == 'N' || Causelove == 'n') // Исключаем проблему зажатого CAPSLOCK
+			{
+				cout << "File not created (Не когратюлэйнш)" << endl;
+				system("pause");
+				Menu();
+			}
+		} while (!(Causelove == 'Y' || Causelove == 'y' || Causelove == 'N' || Causelove == 'n'));
+	}
+	else
+	{
+		flag = 1;
+		fclose(file);
+		cout << "File opened successfully (Когратюлэйнш)" << endl;
+		system("pause");
+	}
+}
+
+void RecordTransport(Name FileName, Transport& Avto, int flag) // Добавление автомобиля в базу
+{
+	if (flag)
+	{
+		file = fopen(FileName, "a");
+		EnterTransport(Avto);
+		fwrite(&Avto, sizeof(Avto), 1, file);
+		fclose(file);
+	}
+	else
+	{
+	 PrintErr();
+	}
+}
+
+void ShowFile() // Вывод файла на экран
+{
+	if (flag)
+	{
+		file = fopen(FileName, "r");
+		cout << FileName << "\n\n";
+		for (int i = 1; fread(&Avto, sizeof(Transport), 1, file); i++)
+		{
+			cout << "Records' number: " << i << "\n\n";
+			ShowTransport(Avto);
+			cout << endl << endl;
+		}
+		getch();
+		fclose(file);
+	}
+	else
+	{
+	PrintErr();
+	}
+}
+
+long FileSize(File* file) // Размер файла
+{
+	long curpos, length;
+
+	curpos = ftell(file);          // Запоминаем текущее положение
+	fseek(file, 0L, SEEK_END);     // Переходим в конец
+	length = ftell(file);          // Запоминаем положение в конце
+	fseek(file, curpos, SEEK_SET); //Перемещаем на старое положение
+	return length;
+}
+
+void SearchTransport(Name FileName, Transport& Avto, int flag) // Поиск нужного автомобиля
+{
+	if (flag)
+	{
+		vector <Transport> vec_auto;
+		file = fopen(FileName, "r");
+		fread(&Avto, sizeof(Transport), 1, file);
+		int fflag = 0;
+
+		double hp;
+		cout << "Enter the required amount of horse power" << endl; cin >> hp;
+
+		file = fopen(FileName, "r");
+		while (fread(&Avto, sizeof(Transport), 1, file))
+		{
+			if (Avto.power > hp)                                 /*Условия поиска автомобиля*/
+				vec_auto.push_back(Avto);
+		}
+
+		for (unsigned int iter = 0; iter < vec_auto.size(); ++iter) {
+			cout << "Сar model : "        << vec_auto.at(iter).mk     << '\n';
+			cout << "Car power: "         << vec_auto.at(iter).power  << '\n';
+			cout << "Car cost (in $.): "  << vec_auto.at(iter).cost   << '\n';
+/*Вивод информации о найденом автомобиле*/
+			cout << "Registration date: " << vec_auto.at(iter).date   << '\n';
+			cout << "Car color: "         << vec_auto.at(iter).color  << '\n';
+			cout << "Plate number: "      << vec_auto.at(iter).number << '\n';
+			cout << "*********************************"               << '\n';
+		}
+
+		getch();
+		fclose(file);
+	}
+	else
+	{
+	PrintErr();
+	}
+}
+
+int main()
+{
+	setlocale(LC_ALL, "Russian");   // Русификация (Понимание русского языка)
+	char Causelove;
+	system("cls");
+	do
+	{
+		Menu();
+		Causelove = getch();
+		switch (Causelove)                          // Выбор нужного раздела в меню
+		{
+		case '1':   system("cls");
+			CreatOpenFile(FileName, flag);          // Создание/открытие файла базы данных
+			break;
+		case '2':   system("cls");
+			RecordTransport(FileName, Avto, flag);       // Добавление автомобиля в базу
+			break;
+		case '3':   system("cls");
+			ShowFile();                             // Вывод файла на экран
+			break;
+		case '4':   system("cls");
+			SearchTransport(FileName, Avto, flag);  // Поиск нужного автомобиля
+			break;
+		case '0':
+			exit(1);
+		}
+	} while (Causelove != 27);
+	return 0;
+}
